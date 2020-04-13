@@ -84,7 +84,7 @@ function Export-PEServerConfigurationProfile
         [Parameter(ParameterSetName = 'Local')]
         [ValidateSet('XML','JSON')]
         [string]
-        $ExportFormat='JSON',        
+        $ExportFormat='JSON',
 
         [Parameter(ParameterSetName='General')]
         [Parameter(ParameterSetName='Passthru')]
@@ -127,11 +127,11 @@ function Export-PEServerConfigurationProfile
 
         if ($PSCmdlet.ParameterSetName -ne 'Local')
         {
-            if ($ShareObject) 
+            if ($ShareObject)
             {
                 $parameters = $ShareObject.Clone()
-            } 
-            else 
+            }
+            else
             {
                 $parameters = @{
                     IPAddress = $IPAddress
@@ -140,34 +140,34 @@ function Export-PEServerConfigurationProfile
                     ExportUse = ([ExportUse]$ExportUse -as [int])
                 }
 
-                if ($Credential) 
+                if ($Credential)
                 {
                     $Parameters.Add('Username',$Credential.GetNetworkCredential().UserName)
                     $Parameters.Add('Password',$Credential.GetNetworkCredential().Password)
-                    if ($Credential.GetNetworkCredential().Domain) 
+                    if ($Credential.GetNetworkCredential().Domain)
                     {
                         $Parameters.Add('Workgroup',$Credential.GetNetworkCredential().Domain)
                     }
                 }
             }
 
-            if (-not $FileName) 
+            if (-not $FileName)
             {
                 $FileName = "$($iDRACSession.Computername)-Config.xml"
             }
-            
+
             Write-Verbose "Server profile will be backed up as ${FileName}"
-            $Parameters.Add('Filename',$FileName)            
+            $Parameters.Add('Filename',$FileName)
         }
         else
         {
             $parameters = @{
                 ShareType = ([ShareType]$ShareType -as [int])
                 ExportUse = ([ExportUse]$ExportUse -as [int])
-            }    
+            }
         }
 
-        if ($Target) 
+        if ($Target)
         {
             $parameters.Add('Target', $Target)
         }
@@ -175,10 +175,10 @@ function Export-PEServerConfigurationProfile
         $parameters.Add('ExportFormat', [ExportFormat]$ExportFormat -as [int])
     }
 
-    Process 
+    Process
     {
         $job = Invoke-CimMethod -InputObject $instance -MethodName ExportSystemConfiguration -CimSession $iDRACSession -Arguments $Parameters
-        if ($job.ReturnValue -eq 4096) 
+        if ($job.ReturnValue -eq 4096)
         {
             if ($PSCmdlet.ParameterSetName -eq 'Local')
             {
@@ -193,18 +193,18 @@ function Export-PEServerConfigurationProfile
                 }
                 else
                 {
-                    return $jobData    
+                    return $jobData
                 }
             }
             else
             {
-                if ($Wait) 
+                if ($Wait)
                 {
                     Wait-PEConfigurationJob -iDRACSession $iDRACSession -JobID $job.Job.EndpointReference.InstanceID -Activity "Exporting System Configuration for $($iDRACSession.ComputerName)"
-                }    
+                }
             }
-        } 
-        else 
+        }
+        else
         {
             Throw "Job Creation failed with error: $($Job.Message)"
         }
