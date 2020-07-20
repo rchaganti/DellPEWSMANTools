@@ -15,24 +15,24 @@ function Import-PELicense
         [Parameter(Mandatory = $true)]
         $iDRACSession,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter()]
         [String]
         $DeviceFQDD = 'iDRAC.Embedded.1',
 
         [Parameter(Mandatory = $true)]
         [String]
-        $LicenseFilePath = "D:\Scripts\172.16.100.21_8316PA_ravikanth_chagant.xml" ,
+        $LicenseFilePath,
 
         [Parameter()]
         [ValidateRange(0,2)]
         [Int]
-        $ImportOption = 1
+        $ImportOption = 0
     )
 
     $properties= @{SystemCreationClassName="DCIM_SPComputerSystem";SystemName="systemmc";CreationClassName="DCIM_LicenseManagementService";Name="DCIM:LicenseManagementService";}
     $instance = New-CimInstance -ClassName DCIM_LicenseManagementService -Namespace root/dcim -ClientOnly -Key @($properties.keys) -Property $properties    
     
-    $licenseXmlContent = Get-Content -Path $LicenseFilePath -Raw
+    $licenseXmlContent = Get-Content -Path $LicenseFilePath
     $base64License = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($licenseXmlContent))
 
     $parameters = @{
@@ -41,7 +41,7 @@ function Import-PELicense
         ImportOptions = $ImportOption
     }
 
-    $job = Invoke-CimMethod -InputObject $instance -MethodName ImportLicense -CimSession $session -Arguments $parameters
+    $job = Invoke-CimMethod -InputObject $instance -MethodName ImportLicense -CimSession $iDRACSession -Arguments $parameters
 
     return $job
 }
